@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -78,9 +79,11 @@ func main() {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	})
 
+	addressAndPort := fmt.Sprintf("%s:%s", os.Getenv("IP_ADDRESS"), os.Getenv("PORT"))
+
 	// Start Server
-	log.Println("KnowledgeGPT server is running on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	log.Printf("KnowledgeGPT server is running on %s\n", addressAndPort)
+	if err := http.ListenAndServe(addressAndPort, nil); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
 }
