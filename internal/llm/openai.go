@@ -15,9 +15,14 @@ type OpenAIClient struct {
 }
 
 type OpenAIRequest struct {
-	Model     string `json:"model"`
-	Prompt    string `json:"prompt"`
-	MaxTokens int    `json:"max_tokens,omitempty"`
+	Model     string          `json:"model"`
+	Messages  []OpenAIMessage `json:"messages"`
+	MaxTokens int             `json:"max_tokens,omitempty"`
+}
+
+type OpenAIMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
 }
 
 type OpenAIResponse struct {
@@ -37,9 +42,14 @@ func NewOpenAIClient(endpoint, apiKey string) *OpenAIClient {
 }
 
 func (c *OpenAIClient) SendPrompt(prompt string) (string, error) {
+	message := OpenAIMessage{
+		Role:    "user",
+		Content: prompt,
+	}
+
 	reqBody := OpenAIRequest{
 		Model:     "text-davinci-003",
-		Prompt:    prompt,
+		Messages:  []OpenAIMessage{message},
 		MaxTokens: 150,
 	}
 
