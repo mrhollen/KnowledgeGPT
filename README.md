@@ -62,7 +62,7 @@ KnowledgeGPT is structured into several key components, each encapsulated within
    go mod tidy
    ```
 
-   This will download the necessary dependencies, primarily `modernc.org/sqlite`.
+   This will download the necessary dependencies, primarily `modernc.org/sqlite` and `github.com/joho/godotenv`.
 
 ## Configuration
 
@@ -75,8 +75,10 @@ It's recommended to use environment variables for sensitive information and conf
 - **LLM_ENDPOINT**: The URL of the OpenAI-compatible LLM server.
 - **LLM_API_KEY**: API key for authenticating with the LLM server.
 - **DB_PATH**: Path to the SQLite database file (optional; defaults to `knowledgegpt.db`).
+- **IP_ADDRESS**: The IP Address the server should bind to.
+- **PORT**: The the server should listen on.
 
-You can set these variables in your shell or use a `.env` file with a tool like [`direnv`](https://direnv.net/) or [`dotenv`](https://github.com/joho/godotenv).
+You can set these variables in a `.env` file which will be used by [`dotenv`](https://github.com/joho/godotenv).
 
 ### Example `.env` File
 
@@ -84,6 +86,9 @@ You can set these variables in your shell or use a `.env` file with a tool like 
 LLM_ENDPOINT=https://api.openai.com/v1/engines/davinci/completions
 LLM_API_KEY=your_openai_api_key
 DB_PATH=knowledgegpt.db
+
+IP_ADDRESS=127.0.0.1
+PORT=8080
 ```
 
 *Ensure that `.env` files are excluded from version control to protect sensitive information.*
