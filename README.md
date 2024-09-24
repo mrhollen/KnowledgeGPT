@@ -40,8 +40,6 @@ KnowledgeGPT is structured into several key components, each encapsulated within
 - **internal/session**: Manages chat session persistence.
 - **pkg/utils**: Utility functions, including UUID generation.
 
-![Architecture Diagram](docs/architecture.png) *(Optional: Include an architecture diagram if available.)*
-
 ## Prerequisites
 
 - **Go**: Version 1.20 or higher is recommended. [Download Go](https://golang.org/dl/)
@@ -52,7 +50,7 @@ KnowledgeGPT is structured into several key components, each encapsulated within
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/yourusername/KnowledgeGPT.git
+   git clone https://github.com/mrhollen/KnowledgeGPT.git
    cd KnowledgeGPT
    ```
 
@@ -274,7 +272,7 @@ Contributions are welcome! To contribute to KnowledgeGPT, please follow these st
 2. **Clone Your Fork**
 
    ```bash
-   git clone https://github.com/yourusername/KnowledgeGPT.git
+   git clone https://github.com/mrhollen/KnowledgeGPT.git
    cd KnowledgeGPT
    ```
 
