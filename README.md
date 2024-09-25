@@ -76,7 +76,7 @@ It's recommended to use environment variables for sensitive information and conf
 - **LLM_API_KEY**: API key for authenticating with the LLM server.
 - **DB_PATH**: Path to the SQLite database file (optional; defaults to `knowledgegpt.db`).
 - **IP_ADDRESS**: The IP Address the server should bind to.
-- **PORT**: The the server should listen on.
+- **PORT**: The port the server should listen on.
 
 You can set these variables in a `.env` file which will be used by [`dotenv`](https://github.com/joho/godotenv).
 
