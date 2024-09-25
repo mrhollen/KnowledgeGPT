@@ -38,13 +38,18 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	queryVector, err := h.LLM.GetEmbedding(req.Query, req.Model)
+	if err != nil {
+		http.Error(w, "Could not generate query embedding", http.StatusInternalServerError)
+	}
+
 	limit := h.Limit
 	if req.Limit != nil {
 		limit = *req.Limit
 	}
 
 	// Search documents
-	docs, err := h.DB.SearchDocuments(req.Query, limit)
+	docs, err := h.DB.SearchDocuments(queryVector, limit)
 	if err != nil {
 		http.Error(w, "Failed to search documents", http.StatusInternalServerError)
 		return

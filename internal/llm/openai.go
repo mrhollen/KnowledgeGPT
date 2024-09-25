@@ -10,11 +10,17 @@ import (
 )
 
 type OpenAIClient struct {
-	Endpoint         string
-	APIKey           string
-	HTTPClient       *http.Client
-	systemPrompt     string
-	defaultModelName string
+	Endpoint          string
+	EmbeddingEndpoint string
+	APIKey            string
+	HTTPClient        *http.Client
+	systemPrompt      string
+	defaultModelName  string
+}
+
+type OpenAIEmbeddingRequest struct {
+	Model string `json:"model"`
+	Input string `json:"input"`
 }
 
 type OpenAIRequest struct {
@@ -27,6 +33,14 @@ type OpenAIRequest struct {
 type OpenAIMessage struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
+}
+
+type OpenAIEmbeddingResponseData struct {
+	Embedding []float32 `json:"embedding"`
+}
+
+type OpenAIEmbeddingResponse struct {
+	Data []OpenAIEmbeddingResponseData `json:"data"`
 }
 
 type OpenAIResponse struct {
@@ -43,14 +57,80 @@ func NewOpenAIClient(endpoint, apiKey string, defaultModelName string) *OpenAICl
 	}
 
 	return &OpenAIClient{
-		Endpoint: endpoint,
-		APIKey:   apiKey,
+		Endpoint:          endpoint,
+		EmbeddingEndpoint: "http://127.0.0.1:8081/v1/embeddings",
+		APIKey:            apiKey,
 		HTTPClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
 		defaultModelName: defaultModelName,
 		systemPrompt:     string(systemPrompt),
 	}
+}
+
+func (c *OpenAIClient) GetEmbedding(input string, modelName string) ([]float32, error) {
+	embeddingRequest := OpenAIEmbeddingRequest{
+		Model: c.defaultModelName,
+		Input: input,
+	}
+
+	fmt.Println(embeddingRequest)
+
+	data, err := json.Marshal(embeddingRequest)
+	if err != nil {
+		return []float32{}, err
+	}
+
+	req, err := http.NewRequest("POST", c.EmbeddingEndpoint, bytes.NewBuffer(data))
+	if err != nil {
+		return []float32{}, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	if c.APIKey != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.APIKey))
+	}
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return []float32{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return []float32{}, fmt.Errorf("LLM server returned status: %s", resp.Status)
+	}
+
+	var embeddingResponse OpenAIEmbeddingResponse
+	if err := json.NewDecoder(resp.Body).Decode(&embeddingResponse); err != nil {
+		return []float32{}, err
+	}
+
+	if len(embeddingResponse.Data) == 0 {
+		return []float32{}, fmt.Errorf("no response from LLM server")
+	}
+
+	return embeddingResponse.Data[0].Embedding, nil
+}
+
+func (c *OpenAIClient) GetSearchWords(queryString string, modelName string) (string, error) {
+	message := OpenAIMessage{
+		Role:    "user",
+		Content: "Please create a search query for this. ONLY give me the search string. Do not use quotes: \n\n" + queryString,
+	}
+
+	if modelName == "" {
+		modelName = c.defaultModelName
+	}
+
+	reqBody := OpenAIRequest{
+		Model:       modelName,
+		Messages:    []OpenAIMessage{message},
+		MaxTokens:   -1,
+		Temperature: 0,
+	}
+
+	return c.getResponse(&reqBody)
 }
 
 func (c *OpenAIClient) SendPrompt(prompt string, modelName string) (string, error) {
@@ -75,6 +155,10 @@ func (c *OpenAIClient) SendPrompt(prompt string, modelName string) (string, erro
 		Temperature: 0,
 	}
 
+	return c.getResponse(&reqBody)
+}
+
+func (c *OpenAIClient) getResponse(reqBody *OpenAIRequest) (string, error) {
 	fmt.Println(reqBody)
 
 	data, err := json.Marshal(reqBody)

@@ -38,8 +38,10 @@ func main() {
 		dbPath = "knowledgegpt.db" // Default value
 	}
 
+	dbConnectionString := os.Getenv("DB_CONNECTION_STRING")
+
 	// Initialize Database
-	database, err := db.NewSQLiteDB(dbPath)
+	database, err := db.NewPostgresDB(dbConnectionString)
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
@@ -48,7 +50,7 @@ func main() {
 	llmClient := llm.NewOpenAIClient(llmEndpoint, llmAPIKey, llmDefaultModel)
 
 	// Initialize Handlers
-	docHandler := &handlers.DocumentHandler{DB: database}
+	docHandler := &handlers.DocumentHandler{Client: llmClient, DB: database}
 	queryHandler := &handlers.QueryHandler{
 		DB:    database,
 		LLM:   llmClient,

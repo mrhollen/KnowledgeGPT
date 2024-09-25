@@ -1,10 +1,11 @@
 package models
 
 type Document struct {
-	ID    int64  `json:"id"`
-	Title string `json:"title"`
-	URL   string `json:"url,omitempty"`
-	Body  string `json:"body"`
+	ID    int64     `json:"id"`
+	Title string    `json:"title"`
+	URL   string    `json:"url,omitempty"`
+	Body  string    `json:"body"`
+	Vec   []float32 `json:"vector"`
 }
 
 type ChatSession struct {

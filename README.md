@@ -24,8 +24,8 @@
 ## Features
 
 - **HTTP Server**: Handles incoming requests to add documents, perform queries, and manage chat sessions.
-- **Document Management**: Accepts documents with a title, optional URL, and body text, storing them in a SQLite database.
-- **Flexible Database Layer**: Interfaces with the database layer, allowing easy swapping of implementations; defaults to SQLite for simplicity and testing.
+- **Document Management**: Accepts documents with a title, optional URL, and body text, storing them in a Postgres Vector Database.
+- **Flexible Database Layer**: Interfaces with the database layer, allowing easy swapping of implementations.
 - **LLM Integration**: Communicates with OpenAI-compatible servers to generate responses based on user queries and retrieved documents.
 - **Chat Session Management**: Maintains persistent chat sessions across multiple requests and sessions using unique identifiers.
 - **Minimal Dependencies**: Built primarily with Go's standard library to ensure lightweight and easy maintenance.
@@ -35,7 +35,7 @@
 KnowledgeGPT is structured into several key components, each encapsulated within its own package:
 
 - **cmd/server**: Entry point of the application.
-- **internal/db**: Database interfaces and SQLite implementation.
+- **internal/db**: Database interfaces and Postgres implementation.
 - **internal/llm**: LLM client interfaces and OpenAI-compatible implementation.
 - **internal/handlers**: HTTP handlers for managing documents, queries, and chat sessions.
 - **internal/models**: Data models used across the application.
@@ -44,8 +44,7 @@ KnowledgeGPT is structured into several key components, each encapsulated within
 
 ## Prerequisites
 
-- **Go**: Version 1.20 or higher is recommended. [Download Go](https://golang.org/dl/)
-- **SQLite**: No separate installation required as the application uses a pure Go SQLite driver.
+- **Go**: Version 1.23 or higher is recommended. [Download Go](https://golang.org/dl/)
 
 ## Installation
 
@@ -64,11 +63,11 @@ KnowledgeGPT is structured into several key components, each encapsulated within
    go mod tidy
    ```
 
-   This will download the necessary dependencies, primarily `modernc.org/sqlite` and `github.com/joho/godotenv`.
+   This will download the necessary dependencies..
 
 ## Configuration
 
-KnowledgeGPT requires configuration for the SQLite database and the LLM server. By default, it uses a local SQLite database file named `knowledgegpt.db` and connects to an OpenAI-compatible endpoint.
+KnowledgeGPT requires configuration for the Postgres database and the LLM server.
 
 ### Environment Variables
 
@@ -77,7 +76,7 @@ It's recommended to use environment variables for sensitive information and conf
 - **LLM_ENDPOINT**: The URL of the OpenAI-compatible LLM server.
 - **LLM_API_KEY**: API key for authenticating with the LLM server.
 - **LLM_DEFAULT_MODEL**: The name of the default model to use when not specified in the user's request.
-- **DB_PATH**: Path to the SQLite database file (optional; defaults to `knowledgegpt.db`).
+- **DB_CONNECTION_STRING**: Your postgres connection string.
 - **IP_ADDRESS**: The IP Address the server should bind to.
 - **PORT**: The port the server should listen on.
 
@@ -88,7 +87,9 @@ You can set these variables in a `.env` file which will be used by [`dotenv`](ht
 ```env
 LLM_ENDPOINT=https://api.openai.com/v1/engines/davinci/completions
 LLM_API_KEY=your_openai_api_key
-DB_PATH=knowledgegpt.db
+LLM_DEFAULT_MODEL=LLAMA-3.1-8B
+
+DB_CONNECTION_STRING=postgresql://postgres:password@localhost
 
 IP_ADDRESS=127.0.0.1
 PORT=8080
@@ -242,7 +243,7 @@ KnowledgeGPT/
 ├── internal/
 │   ├── db/
 │   │   ├── db.go            # Database interface
-│   │   └── sqlite.go        # SQLite implementation
+│   │   └── postgres.go      # Postgres implementation
 │   ├── handlers/
 │   │   ├── document.go      # Handler for document endpoints
 │   │   ├── query.go         # Handler for query endpoints
