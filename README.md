@@ -317,6 +317,6 @@ Contributions are welcome! To contribute to KnowledgeGPT, please follow these st
 
 ## License
 
-[Creative Commons Attribution-NonCommercial (CC BY-NC) license](https://www.creativecommons.org/licenses/by-nc/4.0/deed.en)
+[Creative Commons Attribution-NonCommercial (CC BY-NC) license](./LICENSE)
 
 *Feel free to reach out via [issues](https://github.com/mrhollen/KnowledgeGPT/issues) for any questions, suggestions, or contributions!*
