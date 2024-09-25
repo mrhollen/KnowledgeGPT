@@ -27,6 +27,7 @@ func main() {
 
 	// Retrieve configuration from environment variables
 	llmEndpoint := os.Getenv("LLM_ENDPOINT")
+	llmEmbeddingEndpoint := os.Getenv("LLM_EMBEDDING_ENDPOINT")
 	llmAPIKey := os.Getenv("LLM_API_KEY")
 	llmDefaultModel := os.Getenv("LLM_DEFAULT_MODEL")
 	if llmDefaultModel == "" {
@@ -47,7 +48,7 @@ func main() {
 	}
 
 	// Initialize LLM Client
-	llmClient := llm.NewOpenAIClient(llmEndpoint, llmAPIKey, llmDefaultModel)
+	llmClient := llm.NewOpenAIClient(llmEndpoint, llmEmbeddingEndpoint, llmAPIKey, llmDefaultModel)
 
 	// Initialize Handlers
 	docHandler := &handlers.DocumentHandler{Client: llmClient, DB: database}

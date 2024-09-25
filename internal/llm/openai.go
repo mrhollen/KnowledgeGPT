@@ -49,7 +49,7 @@ type OpenAIResponse struct {
 	} `json:"choices"`
 }
 
-func NewOpenAIClient(endpoint, apiKey string, defaultModelName string) *OpenAIClient {
+func NewOpenAIClient(endpoint string, embeddingEndpoint string, apiKey string, defaultModelName string) *OpenAIClient {
 	systemPrompt, err := os.ReadFile("./system_prompt.txt")
 
 	if err != nil {
@@ -58,7 +58,7 @@ func NewOpenAIClient(endpoint, apiKey string, defaultModelName string) *OpenAICl
 
 	return &OpenAIClient{
 		Endpoint:          endpoint,
-		EmbeddingEndpoint: "http://127.0.0.1:8081/v1/embeddings",
+		EmbeddingEndpoint: embeddingEndpoint,
 		APIKey:            apiKey,
 		HTTPClient: &http.Client{
 			Timeout: 30 * time.Second,

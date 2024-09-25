@@ -74,6 +74,7 @@ KnowledgeGPT requires configuration for the Postgres database and the LLM server
 It's recommended to use environment variables for sensitive information and configuration settings.
 
 - **LLM_ENDPOINT**: The URL of the OpenAI-compatible LLM server.
+- **LLM_EMBEDDING_ENDPOINT**: The URL of the OpenAI-compatible LLM server used specifically for creating embedding vectors.
 - **LLM_API_KEY**: API key for authenticating with the LLM server.
 - **LLM_DEFAULT_MODEL**: The name of the default model to use when not specified in the user's request.
 - **DB_CONNECTION_STRING**: Your postgres connection string.
@@ -86,6 +87,7 @@ You can set these variables in a `.env` file which will be used by [`dotenv`](ht
 
 ```env
 LLM_ENDPOINT=https://api.openai.com/v1/engines/davinci/completions
+LLM_EMBEDDING_ENDPOINT=https://api.openai.com/v1/embeddings
 LLM_API_KEY=your_openai_api_key
 LLM_DEFAULT_MODEL=LLAMA-3.1-8B
 
