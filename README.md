@@ -98,24 +98,12 @@ PORT=8080
 
 ### Running the Server
 
-1. **Set Environment Variables**
+```bash
+go build -o knowledgegpt ./cmd/server
+./knowledgegpt
+```
 
-   Export the necessary environment variables in your shell:
-
-   ```bash
-   export LLM_ENDPOINT="https://api.openai.com/v1/engines/davinci/completions"
-   export LLM_API_KEY="your_openai_api_key"
-   export DB_PATH="knowledgegpt.db" # Optional
-   ```
-
-2. **Build and Run**
-
-   ```bash
-   go build -o knowledgegpt ./cmd/server
-   ./knowledgegpt
-   ```
-
-   The server will start and listen on `http://localhost:8080`.
+The server will start and listen on the IP Address and Port configured in the `.env` file.
 
 ### API Endpoints
 
