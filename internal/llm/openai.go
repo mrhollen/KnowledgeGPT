@@ -16,9 +16,10 @@ type OpenAIClient struct {
 }
 
 type OpenAIRequest struct {
-	Model     string          `json:"model"`
-	Messages  []OpenAIMessage `json:"messages"`
-	MaxTokens int             `json:"max_tokens,omitempty"`
+	Model       string          `json:"model"`
+	Messages    []OpenAIMessage `json:"messages"`
+	MaxTokens   int             `json:"max_tokens,omitempty"`
+	Temperature int             `json:"tempurature"`
 }
 
 type OpenAIMessage struct {
@@ -54,9 +55,10 @@ func (c *OpenAIClient) SendPrompt(prompt string, modelName string) (string, erro
 	}
 
 	reqBody := OpenAIRequest{
-		Model:     modelName,
-		Messages:  []OpenAIMessage{message},
-		MaxTokens: -1,
+		Model:       modelName,
+		Messages:    []OpenAIMessage{message},
+		MaxTokens:   -1,
+		Temperature: 0,
 	}
 
 	fmt.Print(reqBody)
