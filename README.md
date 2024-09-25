@@ -1,5 +1,7 @@
 # KnowledgeGPT
 
+**THIS IS A WORK IN PROGRESS AND IS NOT READY FOR USE**
+
 **KnowledgeGPT** is a lightweight, dependency-minimal Go application designed to ingest documents or text snippets and provide intelligent responses to queries by retrieving relevant information and interfacing with an OpenAI-compatible Language Model (LLM) server. Leveraging Go's powerful standard library, KnowledgeGPT ensures high performance, maintainability, and ease of deployment.
 
 ## Table of Contents
