@@ -94,6 +94,10 @@ PORT=8080
 
 *Ensure that `.env` files are excluded from version control to protect sensitive information.*
 
+### System Prompt
+
+To update the system prompt you can update `system_prompt.txt` to suit your needs. At the moment, this file is loaded on startup and used for *all* requests.
+
 ## Usage
 
 ### Running the Server
