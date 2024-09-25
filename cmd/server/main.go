@@ -28,6 +28,11 @@ func main() {
 	// Retrieve configuration from environment variables
 	llmEndpoint := os.Getenv("LLM_ENDPOINT")
 	llmAPIKey := os.Getenv("LLM_API_KEY")
+	llmDefaultModel := os.Getenv("LLM_DEFAULT_MODEL")
+	if llmDefaultModel == "" {
+		llmDefaultModel = "text-davinci-003"
+	}
+
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
 		dbPath = "knowledgegpt.db" // Default value
@@ -40,7 +45,7 @@ func main() {
 	}
 
 	// Initialize LLM Client
-	llmClient := llm.NewOpenAIClient(llmEndpoint, llmAPIKey)
+	llmClient := llm.NewOpenAIClient(llmEndpoint, llmAPIKey, llmDefaultModel)
 
 	// Initialize Handlers
 	docHandler := &handlers.DocumentHandler{DB: database}

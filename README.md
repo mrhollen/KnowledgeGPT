@@ -74,6 +74,7 @@ It's recommended to use environment variables for sensitive information and conf
 
 - **LLM_ENDPOINT**: The URL of the OpenAI-compatible LLM server.
 - **LLM_API_KEY**: API key for authenticating with the LLM server.
+- **LLM_DEFAULT_MODEL**: The name of the default model to use when not specified in the user's request.
 - **DB_PATH**: Path to the SQLite database file (optional; defaults to `knowledgegpt.db`).
 - **IP_ADDRESS**: The IP Address the server should bind to.
 - **PORT**: The port the server should listen on.

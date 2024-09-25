@@ -17,6 +17,7 @@ type ChatHandler struct {
 type ChatRequest struct {
 	Query     string `json:"query"`
 	SessionID string `json:"session_id,omitempty"`
+	Model     string `json:"model"`
 }
 
 type ChatResponse struct {
@@ -65,7 +66,7 @@ func (h *ChatHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	prompt += "AI:"
 
 	// Send to LLM
-	response, err := h.LLM.SendPrompt(prompt)
+	response, err := h.LLM.SendPrompt(prompt, req.Model)
 	if err != nil {
 		http.Error(w, "Failed to get response from LLM", http.StatusInternalServerError)
 		return

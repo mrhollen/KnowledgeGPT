@@ -10,4 +10,5 @@ type Document struct {
 type ChatSession struct {
 	ID       string   `json:"id"`
 	Messages []string `json:"messages"`
+	Model    string   `json:"model"`
 }

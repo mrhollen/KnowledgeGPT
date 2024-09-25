@@ -19,6 +19,7 @@ type QueryRequest struct {
 	Query     string `json:"query"`
 	SessionID string `json:"session_id"`
 	Limit     *int   `json:"limit,omitempty"`
+	Model     string `json:"model"`
 }
 
 type QueryResponse struct {
@@ -57,7 +58,7 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 	prompt += req.Query
 
 	// Send to LLM
-	response, err := h.LLM.SendPrompt(prompt)
+	response, err := h.LLM.SendPrompt(prompt, req.Model)
 	if err != nil {
 		http.Error(w, "Failed to get response from LLM", http.StatusInternalServerError)
 		return

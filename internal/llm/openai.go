@@ -9,9 +9,10 @@ import (
 )
 
 type OpenAIClient struct {
-	Endpoint   string
-	APIKey     string
-	HTTPClient *http.Client
+	Endpoint         string
+	APIKey           string
+	HTTPClient       *http.Client
+	defaultModelName string
 }
 
 type OpenAIRequest struct {
@@ -31,24 +32,29 @@ type OpenAIResponse struct {
 	} `json:"choices"`
 }
 
-func NewOpenAIClient(endpoint, apiKey string) *OpenAIClient {
+func NewOpenAIClient(endpoint, apiKey string, defaultModelName string) *OpenAIClient {
 	return &OpenAIClient{
 		Endpoint: endpoint,
 		APIKey:   apiKey,
 		HTTPClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		defaultModelName: defaultModelName,
 	}
 }
 
-func (c *OpenAIClient) SendPrompt(prompt string) (string, error) {
+func (c *OpenAIClient) SendPrompt(prompt string, modelName string) (string, error) {
 	message := OpenAIMessage{
 		Role:    "user",
 		Content: prompt,
 	}
 
+	if modelName == "" {
+		modelName = c.defaultModelName
+	}
+
 	reqBody := OpenAIRequest{
-		Model:     "text-davinci-003",
+		Model:     modelName,
 		Messages:  []OpenAIMessage{message},
 		MaxTokens: -1,
 	}
