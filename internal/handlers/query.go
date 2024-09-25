@@ -51,9 +51,13 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Prepend documents to the prompt
-	prompt := ""
+	prompt := "Search results: \n"
+	if len(docs) < 1 {
+		prompt += "No results \n\n"
+	}
+
 	for _, doc := range docs {
-		prompt += fmt.Sprintf("Title: %s\nURL: %s\nContent: %s\n\n", doc.Title, doc.URL, doc.Body)
+		prompt += fmt.Sprintf("```\nTitle: %s\nURL: %s\nContent: %s\n```\n\n", doc.Title, doc.URL, doc.Body)
 	}
 	prompt += req.Query
 
