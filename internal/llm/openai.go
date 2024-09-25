@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -12,6 +13,7 @@ type OpenAIClient struct {
 	Endpoint         string
 	APIKey           string
 	HTTPClient       *http.Client
+	systemPrompt     string
 	defaultModelName string
 }
 
@@ -34,6 +36,12 @@ type OpenAIResponse struct {
 }
 
 func NewOpenAIClient(endpoint, apiKey string, defaultModelName string) *OpenAIClient {
+	systemPrompt, err := os.ReadFile("./system_prompt.txt")
+
+	if err != nil {
+		panic("No system prompt found! Please make sure there is a file named system_prompt.txt in your project root.")
+	}
+
 	return &OpenAIClient{
 		Endpoint: endpoint,
 		APIKey:   apiKey,
@@ -41,10 +49,16 @@ func NewOpenAIClient(endpoint, apiKey string, defaultModelName string) *OpenAICl
 			Timeout: 30 * time.Second,
 		},
 		defaultModelName: defaultModelName,
+		systemPrompt:     string(systemPrompt),
 	}
 }
 
 func (c *OpenAIClient) SendPrompt(prompt string, modelName string) (string, error) {
+	systemMessage := OpenAIMessage{
+		Role:    "system",
+		Content: c.systemPrompt,
+	}
+
 	message := OpenAIMessage{
 		Role:    "user",
 		Content: prompt,
@@ -56,12 +70,12 @@ func (c *OpenAIClient) SendPrompt(prompt string, modelName string) (string, erro
 
 	reqBody := OpenAIRequest{
 		Model:       modelName,
-		Messages:    []OpenAIMessage{message},
+		Messages:    []OpenAIMessage{systemMessage, message},
 		MaxTokens:   -1,
 		Temperature: 0,
 	}
 
-	fmt.Print(reqBody)
+	fmt.Println(reqBody)
 
 	data, err := json.Marshal(reqBody)
 	if err != nil {
