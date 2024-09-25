@@ -27,7 +27,7 @@ type OpenAIMessage struct {
 
 type OpenAIResponse struct {
 	Choices []struct {
-		Text string `json:"text"`
+		Message OpenAIMessage `json:"message"`
 	} `json:"choices"`
 }
 
@@ -50,8 +50,10 @@ func (c *OpenAIClient) SendPrompt(prompt string) (string, error) {
 	reqBody := OpenAIRequest{
 		Model:     "text-davinci-003",
 		Messages:  []OpenAIMessage{message},
-		MaxTokens: 150,
+		MaxTokens: -1,
 	}
+
+	fmt.Print(reqBody)
 
 	data, err := json.Marshal(reqBody)
 	if err != nil {
@@ -87,5 +89,5 @@ func (c *OpenAIClient) SendPrompt(prompt string) (string, error) {
 		return "", fmt.Errorf("no response from LLM server")
 	}
 
-	return llmResp.Choices[0].Text, nil
+	return llmResp.Choices[0].Message.Content, nil
 }
