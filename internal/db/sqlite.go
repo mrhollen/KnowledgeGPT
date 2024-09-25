@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"strings"
 
 	"github.com/mrhollen/KnowledgeGPT/internal/models"
 	_ "modernc.org/sqlite"
@@ -29,6 +30,12 @@ func NewSQLiteDB(dataSourceName string) (*SQLiteDB, error) {
             id TEXT PRIMARY KEY,
             messages TEXT
         );`,
+		`CREATE VIRTUAL TABLE IF NOT EXISTS fts_documents USING 
+			fts5(id UNINDEXED, 
+			title, 
+			url UNINDEXED, 
+			body
+		);`,
 	}
 
 	for _, q := range queries {
@@ -47,8 +54,10 @@ func (s *SQLiteDB) AddDocument(doc models.Document) error {
 }
 
 func (s *SQLiteDB) SearchDocuments(queryStr string, limit int) ([]models.Document, error) {
-	query := `SELECT id, title, url, body FROM documents WHERE body LIKE ? LIMIT ?`
-	rows, err := s.conn.Query(query, "%"+queryStr+"%", limit)
+	query := `SELECT id, title, url, body FROM fts_documents WHERE body MATCH ? ORDER BY rank LIMIT ?`
+	escapedQueryString := strings.ReplaceAll(queryStr, "?", "")
+
+	rows, err := s.conn.Query(query, escapedQueryString, limit)
 	if err != nil {
 		return nil, err
 	}
