@@ -74,8 +74,6 @@ func (c *OpenAIClient) GetEmbedding(input string, modelName string) ([]float32, 
 		Input: input,
 	}
 
-	fmt.Println(embeddingRequest)
-
 	data, err := json.Marshal(embeddingRequest)
 	if err != nil {
 		return []float32{}, err

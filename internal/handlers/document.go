@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	api "github.com/mrhollen/KnowledgeGPT/internal/api/documents"
 	"github.com/mrhollen/KnowledgeGPT/internal/db"
 	"github.com/mrhollen/KnowledgeGPT/internal/llm"
 	"github.com/mrhollen/KnowledgeGPT/internal/models"
@@ -15,14 +16,8 @@ type DocumentHandler struct {
 	DB     db.DB
 }
 
-type AddDocumentRequest struct {
-	Title string `json:"title"`
-	URL   string `json:"url,omitempty"`
-	Body  string `json:"body"`
-}
-
 func (h *DocumentHandler) AddDocument(w http.ResponseWriter, r *http.Request) {
-	var req AddDocumentRequest
+	var req api.AddDocumentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
@@ -35,14 +30,28 @@ func (h *DocumentHandler) AddDocument(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	datasetName := req.Dataset
+	if datasetName == "" {
+		datasetName = "default"
+	}
+
+	datasetId, err := h.DB.GetOrCreateDataset(datasetName)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Error getting or creating dataset", http.StatusInternalServerError)
+		return
+	}
+
 	doc := models.Document{
-		Title: req.Title,
-		URL:   req.URL,
-		Body:  req.Body,
-		Vec:   vec,
+		Title:     req.Title,
+		URL:       req.URL,
+		Body:      req.Body,
+		Vec:       vec,
+		DatasetID: datasetId,
 	}
 
 	if err := h.DB.AddDocument(doc); err != nil {
+		fmt.Println(err)
 		http.Error(w, "Failed to add document", http.StatusInternalServerError)
 		return
 	}

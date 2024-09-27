@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	api "github.com/mrhollen/KnowledgeGPT/internal/api/query"
 	"github.com/mrhollen/KnowledgeGPT/internal/db"
 	"github.com/mrhollen/KnowledgeGPT/internal/llm"
 )
@@ -15,19 +16,8 @@ type QueryHandler struct {
 	Limit int
 }
 
-type QueryRequest struct {
-	Query     string `json:"query"`
-	SessionID string `json:"session_id"`
-	Limit     *int   `json:"limit,omitempty"`
-	Model     string `json:"model"`
-}
-
-type QueryResponse struct {
-	Response string `json:"response"`
-}
-
 func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
-	var req QueryRequest
+	var req api.QueryRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
@@ -47,15 +37,18 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 	if req.Limit != nil {
 		limit = *req.Limit
 	}
+	datasetName := req.Dataset
+	if datasetName == "" {
+		datasetName = "default"
+	}
 
-	// Search documents
-	docs, err := h.DB.SearchDocuments(queryVector, limit)
+	docs, err := h.DB.SearchDocuments(queryVector, datasetName, limit)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, "Failed to search documents", http.StatusInternalServerError)
 		return
 	}
 
-	// Prepend documents to the prompt
 	prompt := "Search results: \n"
 	if len(docs) < 1 {
 		prompt += "No results \n\n"
@@ -66,17 +59,13 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 	}
 	prompt += req.Query
 
-	// Send to LLM
 	response, err := h.LLM.SendPrompt(prompt, req.Model)
 	if err != nil {
 		http.Error(w, "Failed to get response from LLM", http.StatusInternalServerError)
 		return
 	}
 
-	// Optionally, save the response to the session
-	// This requires accessing the session, which can be handled separately
-
-	res := QueryResponse{
+	res := api.QueryResponse{
 		Response: response,
 	}
 
