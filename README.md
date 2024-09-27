@@ -131,7 +131,8 @@ KnowledgeGPT exposes the following HTTP endpoints:
 {
   "title": "Document Title",
   "url": "https://example.com", // Optional
-  "body": "The content of the document."
+  "body": "The content of the document.",
+  "dataset": "my_dataset_name"
 }
 ```
 
@@ -149,8 +150,7 @@ curl -X POST http://localhost:8080/documents \
      -d '{
            "title": "Go Programming",
            "url": "https://golang.org",
-           "body": "Go is an open-source programming language...",
-           "dataset": "my_dataset_name"
+           "body": "Go is an open-source programming language..."
          }'
 ```
 
