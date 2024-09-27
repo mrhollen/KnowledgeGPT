@@ -150,7 +150,8 @@ curl -X POST http://localhost:8080/documents \
      -d '{
            "title": "Go Programming",
            "url": "https://golang.org",
-           "body": "Go is an open-source programming language..."
+           "body": "Go is an open-source programming language...",
+           "dataset": "my_dataset_name"
          }'
 ```
 
@@ -186,52 +187,8 @@ curl -X POST http://localhost:8080/documents \
 curl -X POST http://localhost:8080/query \
      -H "Content-Type: application/json" \
      -d '{
-           "query": "Explain the Go programming language."
-         }'
-```
-
-#### Chat
-
-**Endpoint**: `/chat`
-
-**Method**: `POST`
-
-**Description**: Engages in a persistent chat session with the AI, maintaining context across multiple interactions.
-
-**Request Body**:
-
-```json
-{
-  "query": "Tell me about Go routines.",
-  "session_id": "existing-session-id" // Optional; if omitted, a new session is created
-}
-```
-
-**Response**:
-
-```json
-{
-  "session_id": "unique-session-id",
-  "response": "Go routines are lightweight threads managed by the Go runtime..."
-}
-```
-
-**Example**:
-
-```bash
-# Starting a new chat session
-curl -X POST http://localhost:8080/chat \
-     -H "Content-Type: application/json" \
-     -d '{
-           "query": "Hello, who are you?"
-         }'
-
-# Continuing an existing chat session
-curl -X POST http://localhost:8080/chat \
-     -H "Content-Type: application/json" \
-     -d '{
-           "query": "Can you explain Go routines?",
-           "session_id": "existing-session-id"
+           "query": "Explain the Go programming language.",
+           "dataset": "my_dataset_name"
          }'
 ```
 
@@ -241,27 +198,32 @@ curl -X POST http://localhost:8080/chat \
 KnowledgeGPT/
 ├── cmd/
 │   └── server/
-│       └── main.go          # Entry point of the application
+│       └── main.go                        # Entry point of the application
 ├── internal/
+│   ├── api/
+│   │   ├── documents/
+│   │   │   └── add_document_request.go    # Request object for adding documents
+│   │   └── query/
+│   │       ├── query_request.go           # Request object for querying documents
+│   │       └── query_response.go          # Response object for document queries
 │   ├── db/
-│   │   ├── db.go            # Database interface
-│   │   └── postgres.go      # Postgres implementation
+│   │   ├── db.go                          # Database interface
+│   │   └── postgres.go                    # Postgres implementation
 │   ├── handlers/
-│   │   ├── document.go      # Handler for document endpoints
-│   │   ├── query.go         # Handler for query endpoints
-│   │   └── chat.go          # Handler for chat endpoints
+│   │   ├── document.go                    # Handler for document endpoints
+│   │   ├── query.go                       # Handler for query endpoints
 │   ├── llm/
-│   │   ├── client.go        # LLM client interface
-│   │   └── openai.go        # OpenAI-compatible client implementation
+│   │   ├── client.go                      # LLM client interface
+│   │   └── openai.go                      # OpenAI-compatible client implementation
 │   ├── models/
-│   │   └── models.go        # Data models
+│   │   └── models.go                      # Data models
 │   └── session/
-│       └── session.go       # Session management
+│       └── session.go                     # Session management
 ├── pkg/
 │   └── utils/
-│       └── utils.go         # Utility functions (e.g., UUID generation)
-├── go.mod                   # Go module file
-└── go.sum                   # Go dependencies checksum
+│       └── utils.go                       # Utility functions (e.g., UUID generation)
+├── go.mod                                 # Go module file
+└── go.sum                                 # Go dependencies checksum
 ```
 
 ## Contributing

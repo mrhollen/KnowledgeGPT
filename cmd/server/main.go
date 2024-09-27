@@ -57,10 +57,6 @@ func main() {
 		LLM:   llmClient,
 		Limit: 5,
 	}
-	chatHandler := &handlers.ChatHandler{
-		DB:  database,
-		LLM: llmClient,
-	}
 
 	// Register Routes
 	http.HandleFunc("/documents", func(w http.ResponseWriter, r *http.Request) {
@@ -74,14 +70,6 @@ func main() {
 	http.HandleFunc("/query", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			queryHandler.Query(w, r)
-			return
-		}
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	})
-
-	http.HandleFunc("/chat", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			chatHandler.Chat(w, r)
 			return
 		}
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
