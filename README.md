@@ -166,6 +166,7 @@ KnowledgeGPT exposes the following HTTP endpoints:
 ```bash
 curl -X POST http://localhost:8080/documents \
      -H "Content-Type: application/json" \
+     -H "Authorization: Bearer your_access_token" \
      -d '{
            "title": "Go Programming",
            "url": "https://golang.org",
@@ -206,6 +207,7 @@ curl -X POST http://localhost:8080/documents \
 ```bash
 curl -X POST http://localhost:8080/query \
      -H "Content-Type: application/json" \
+     -H "Authorization: Bearer your_access_token" \
      -d '{
            "query": "Explain the Go programming language.",
            "dataset": "my_dataset_name"
