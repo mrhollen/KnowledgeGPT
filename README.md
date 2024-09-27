@@ -16,7 +16,6 @@
   - [API Endpoints](#api-endpoints)
     - [Add Document](#add-document)
     - [Query](#query)
-    - [Chat](#chat)
 - [Project Structure](#project-structure)
 - [Contributing](#contributing)
 - [License](#license)
