@@ -71,7 +71,7 @@ KnowledgeGPT is structured into several key components, each encapsulated within
 
 4. **Make sure Authentication is Setup**
 
-   Please see the [Authentication](#authentication) section to learn more about how to insert access tokens into the database. Without this you will get a _401 forbidden_ for every request.
+   Please see the [Authentication](#authentication) section to learn more about how to insert access tokens into the database. Without this you will get a _401 Unauthorized_ for every request.
 
 ## Configuration
 
