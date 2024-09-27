@@ -11,7 +11,7 @@ import (
 )
 
 type QueryHandler struct {
-	DB    db.DB
+	DB    *db.PostgresDB
 	LLM   llm.Client
 	Limit int
 }

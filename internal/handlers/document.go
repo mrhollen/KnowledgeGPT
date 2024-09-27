@@ -13,7 +13,7 @@ import (
 
 type DocumentHandler struct {
 	Client llm.Client
-	DB     db.DB
+	DB     *db.PostgresDB
 }
 
 func (h *DocumentHandler) AddDocument(w http.ResponseWriter, r *http.Request) {

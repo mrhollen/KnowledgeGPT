@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS vector;
+
 CREATE TABLE sessions (
 	id text NOT NULL,
 	messages _text NOT NULL,
@@ -18,6 +20,30 @@ CREATE TABLE documents (
 	title text NOT NULL,
 	url text NULL,
 	body text NOT NULL,
-	vector public.vector NOT NULL, -- public.vector requires the pgvector extension
-	CONSTRAINT documents_pkey PRIMARY KEY (id)
+	vector public.vector NOT NULL,
+	CONSTRAINT documents_pkey PRIMARY KEY (id),
+	CONSTRAINT documents_datasets_fk 
+		FOREIGN KEY (dataset_id) 
+		REFERENCES datasets(id) 
+		ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE users (
+	id serial4 NOT NULL,
+	username text NOT NULL,
+	active bool DEFAULT false NOT NULL,
+	CONSTRAINT users_pkey PRIMARY KEY (id),
+	CONSTRAINT users_username_key UNIQUE (username)
+);
+
+CREATE TABLE access_tokens (
+	id serial4 NOT NULL,
+	user_id int4 NOT NULL,
+	"token" varchar NOT NULL,
+	expiration timestamp DEFAULT (now() + '1 year'::interval) NOT NULL,
+	CONSTRAINT access_tokens_pkey PRIMARY KEY (id),
+	CONSTRAINT access_tokens_token_key UNIQUE (token),
+	CONSTRAINT access_tokens_users_fk 
+		FOREIGN KEY (user_id) 
+		REFERENCES users(id)
 );

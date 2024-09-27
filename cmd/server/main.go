@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
+	"github.com/mrhollen/KnowledgeGPT/internal/auth"
 	"github.com/mrhollen/KnowledgeGPT/internal/db"
 	"github.com/mrhollen/KnowledgeGPT/internal/handlers"
 	"github.com/mrhollen/KnowledgeGPT/internal/llm"
@@ -50,8 +52,14 @@ func main() {
 	// Initialize LLM Client
 	llmClient := llm.NewOpenAIClient(llmEndpoint, llmEmbeddingEndpoint, llmAPIKey, llmDefaultModel)
 
+	// Initialize Authorization
+	accessTokenAuthorizer := auth.NewAccessTokenAuthorizer(database)
+
 	// Initialize Handlers
-	docHandler := &handlers.DocumentHandler{Client: llmClient, DB: database}
+	docHandler := &handlers.DocumentHandler{
+		Client: llmClient,
+		DB:     database,
+	}
 	queryHandler := &handlers.QueryHandler{
 		DB:    database,
 		LLM:   llmClient,
@@ -61,6 +69,12 @@ func main() {
 	// Register Routes
 	http.HandleFunc("/documents", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
+			isAuthorized, err := checkAccessToken(r, accessTokenAuthorizer)
+			if !isAuthorized || err != nil {
+				http.Error(w, "", http.StatusUnauthorized)
+				return
+			}
+
 			docHandler.AddDocument(w, r)
 			return
 		}
@@ -69,6 +83,16 @@ func main() {
 
 	http.HandleFunc("/query", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
+			isAuthorized, err := checkAccessToken(r, accessTokenAuthorizer)
+			if !isAuthorized || err != nil {
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				http.Error(w, "", http.StatusUnauthorized)
+				return
+			}
+
 			queryHandler.Query(w, r)
 			return
 		}
@@ -82,4 +106,18 @@ func main() {
 	if err := http.ListenAndServe(addressAndPort, nil); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
+}
+
+func checkAccessToken(r *http.Request, accessTokenAuthorizer *auth.AccessTokenAuthorizer) (bool, error) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		return false, fmt.Errorf("authorization header is missing")
+	}
+
+	token := strings.TrimPrefix(authHeader, "Bearer ")
+	if token == authHeader {
+		return false, fmt.Errorf("invalid Authorization header format")
+	}
+
+	return accessTokenAuthorizer.CheckToken(token)
 }

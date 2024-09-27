@@ -193,6 +193,36 @@ func (pg *PostgresDB) GetOrCreateDataset(datasetName string) (int64, error) {
 	return id, err
 }
 
+func (pg *PostgresDB) GetAccessTokens() (*[]models.AccessToken, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	query := `
+		SELECT user_id, token, expiration
+		FROM access_tokens
+		WHERE expiration > NOW();
+	`
+
+	rows, err := pg.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute query: %w", err)
+	}
+	defer rows.Close()
+
+	var accessTokens []models.AccessToken
+	for rows.Next() {
+		var accessToken models.AccessToken
+		err := rows.Scan(&accessToken.UserID, &accessToken.Token, &accessToken.Expiration)
+		if err != nil {
+			return &[]models.AccessToken{}, fmt.Errorf("failed to scan document %w", err)
+		}
+
+		accessTokens = append(accessTokens, accessToken)
+	}
+
+	return &accessTokens, nil
+}
+
 func (pg *PostgresDB) Close() error {
 	return pg.db.Close()
 }
