@@ -44,6 +44,7 @@ KnowledgeGPT is structured into several key components, each encapsulated within
 ## Prerequisites
 
 - **Go**: Version 1.23 or higher is recommended. [Download Go](https://golang.org/dl/)
+- **pgvector**: PostgreSQL with the pgvector extension installed is required. [Github](https://github.com/pgvector/pgvector)
 
 ## Installation
 
@@ -63,6 +64,14 @@ KnowledgeGPT is structured into several key components, each encapsulated within
    ```
 
    This will download the necessary dependencies..
+
+3. **Create the Postgres Database**
+   
+   Included in the root of this project is a file called `create_postgres_database.sql` that contains all the SQL statements needed to setup your database. Feel free to modify it to suit your specific needs.
+
+4. **Make sure Authentication is Setup**
+
+   Please see the [Authentication](#authentication) section to learn more about how to insert access tokens into the database. Without this you will get a _401 forbidden_ for every request.
 
 ## Configuration
 
