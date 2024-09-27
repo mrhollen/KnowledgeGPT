@@ -113,6 +113,16 @@ go build -o knowledgegpt ./cmd/server
 
 The server will start and listen on the IP Address and Port configured in the `.env` file.
 
+### Authentication
+
+#### Access Tokens
+
+Currently the only authentication supported is via simple access tokens. There is no set format for these tokens so they can be whatever moves your spirit. To create an access token, you'll need to first insert a new user into the users database table. Then create a new access token in the access_tokens table using your previously inserted user_id. Users aren't currently implemented, but there is a foreign key relation between the two so inserting an access token with a user id that doesn't exist is not possible.
+
+After this is done make sure you include your access token in the Authorization header of each request like this:
+
+`Authorization: Bearer your_token_value`
+
 ### API Endpoints
 
 KnowledgeGPT exposes the following HTTP endpoints:
@@ -207,6 +217,8 @@ KnowledgeGPT/
 │   │   └── query/
 │   │       ├── query_request.go           # Request object for querying documents
 │   │       └── query_response.go          # Response object for document queries
+│   ├── auth/
+│   │   └── access_token_authorizer.go     # Access Token authentication implementation
 │   ├── db/
 │   │   ├── db.go                          # Database interface
 │   │   └── postgres.go                    # Postgres implementation
