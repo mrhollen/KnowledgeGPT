@@ -23,6 +23,22 @@ func (h *DocumentHandler) AddDocument(userId int64, w http.ResponseWriter, r *ht
 		return
 	}
 
+	h.createDocument(userId, req, w)
+}
+
+func (h *DocumentHandler) AddDocuments(userId int64, w http.ResponseWriter, r *http.Request) {
+	var req []api.AddDocumentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	for _, request := range req {
+		h.createDocument(userId, request, w)
+	}
+}
+
+func (h *DocumentHandler) createDocument(userId int64, req api.AddDocumentRequest, w http.ResponseWriter) {
 	vec, err := h.Client.GetEmbedding(req.Body, "")
 	if err != nil {
 		fmt.Println(err)

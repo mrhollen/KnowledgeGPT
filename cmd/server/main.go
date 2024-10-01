@@ -81,6 +81,24 @@ func main() {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	})
 
+	http.HandleFunc("/bulk/documents", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			isAuthorized, userId, err := checkAccessToken(r, accessTokenAuthorizer)
+			if !isAuthorized || err != nil {
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				http.Error(w, "", http.StatusUnauthorized)
+				return
+			}
+
+			docHandler.AddDocuments(userId, w, r)
+			return
+		}
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	})
+
 	http.HandleFunc("/query", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			isAuthorized, userId, err := checkAccessToken(r, accessTokenAuthorizer)
