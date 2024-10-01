@@ -189,7 +189,7 @@ curl -X POST http://localhost:8080/documents \
 {
   "query": "What is Go?",
   "session_id": "optional-session-id",
-  "limit": 5, // Optional; defaults to 5
+  "limit": 512, // Optional; defaults to 512
   "dataset": "my_dataset_name"
 }
 ```
