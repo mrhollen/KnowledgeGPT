@@ -55,7 +55,13 @@ func (h *QueryHandler) Query(userId int64, w http.ResponseWriter, r *http.Reques
 	}
 
 	for _, doc := range docs {
-		prompt += fmt.Sprintf("```\nTitle: %s\nURL: %s\nContent: %s\n```\n\n", doc.Title, doc.URL, doc.Body)
+		docJson, err := json.Marshal(doc)
+		if err != nil {
+			fmt.Println("Error marshaling to JSON:", err)
+			return
+		}
+
+		prompt += fmt.Sprintf("```json\n%s\n```\n\n", docJson)
 	}
 	prompt += req.Query
 

@@ -63,12 +63,12 @@ func (pg *PostgresDB) AddDocument(doc models.Document) error {
 	return nil
 }
 
-func (pg *PostgresDB) SearchDocuments(queryVector []float32, datasetName string, userId int64, limit int) ([]models.Document, error) {
+func (pg *PostgresDB) SearchDocuments(queryVector []float32, datasetName string, userId int64, maxTotalWordCount int) ([]models.Document, error) {
 	if len(queryVector) == 0 {
 		return nil, errors.New("query vector cannot be empty")
 	}
-	if limit <= 0 {
-		return nil, errors.New("limit must be greater than zero")
+	if maxTotalWordCount <= 0 {
+		return nil, errors.New("maxTotalWordCount must be greater than zero")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -77,15 +77,27 @@ func (pg *PostgresDB) SearchDocuments(queryVector []float32, datasetName string,
 	vec := pgvector.NewVector(queryVector)
 
 	query := `
-		SELECT documents.id, documents.title, documents.url, documents.body, datasets.id
-		FROM documents
-		JOIN datasets ON datasets.id = documents.dataset_id
-		WHERE datasets.name = $1 AND datasets.user_id = $2
-		ORDER BY documents.vector <-> $3
-		LIMIT $4
-	`
+        WITH ranked_docs AS (
+            SELECT 
+                documents.id, 
+                documents.title, 
+                documents.url, 
+                documents.body, 
+                datasets.id AS dataset_id,
+                documents.vector <-> $3 AS distance,
+                array_length(regexp_split_to_array(documents.body, '\s+'), 1) AS word_count,
+                SUM(array_length(regexp_split_to_array(documents.body, '\s+'), 1)) OVER (ORDER BY documents.vector <-> $3) AS cumulative_word_count
+            FROM documents
+            JOIN datasets ON datasets.id = documents.dataset_id
+            WHERE datasets.name = $1 AND datasets.user_id = $2
+        )
+        SELECT id, title, url, body, dataset_id
+        FROM ranked_docs
+        WHERE cumulative_word_count <= $4
+        ORDER BY distance
+    `
 
-	rows, err := pg.db.QueryContext(ctx, query, datasetName, userId, vec, limit)
+	rows, err := pg.db.QueryContext(ctx, query, datasetName, userId, vec, maxTotalWordCount)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute search query: %w", err)
 	}

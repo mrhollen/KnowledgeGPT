@@ -63,7 +63,7 @@ func main() {
 	queryHandler := &handlers.QueryHandler{
 		DB:    database,
 		LLM:   llmClient,
-		Limit: 5,
+		Limit: 512,
 	}
 
 	// Register Routes
