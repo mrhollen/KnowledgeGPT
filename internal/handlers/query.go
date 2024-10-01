@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
+	"strings"
 
 	api "github.com/mrhollen/KnowledgeGPT/internal/api/query"
 	"github.com/mrhollen/KnowledgeGPT/internal/db"
@@ -71,8 +73,27 @@ func (h *QueryHandler) Query(userId int64, w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	re := regexp.MustCompile(`\[citation\](\d+)\[/citation\]`)
+	replacedText := re.ReplaceAllStringFunc(response, func(match string) string {
+		submatches := re.FindStringSubmatch(match)
+		if len(submatches) != 2 {
+			return match
+		}
+
+		var id int64
+		fmt.Sscanf(submatches[1], "%d", &id)
+
+		for _, doc := range docs {
+			if doc.ID == id {
+				return fmt.Sprintf("[%s](%s)", doc.Title, doc.URL)
+			}
+		}
+
+		return match
+	})
+
 	res := api.QueryResponse{
-		Response: response,
+		Response: strings.ReplaceAll(replacedText, "\\n", "\n"),
 	}
 
 	w.Header().Set("Content-Type", "application/json")
