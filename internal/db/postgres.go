@@ -49,13 +49,13 @@ func (pg *PostgresDB) AddDocument(doc models.Document) error {
 	vec := pgvector.NewVector(doc.Vec)
 
 	query := `
-		INSERT INTO documents (dataset_id, user_id, title, url, body, vector)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO documents (dataset_id, title, url, body, vector)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id
 	`
 
 	var insertedID int64
-	err := pg.db.QueryRowContext(ctx, query, doc.DatasetID, doc.UserID, doc.Title, doc.URL, doc.Body, vec).Scan(&insertedID)
+	err := pg.db.QueryRowContext(ctx, query, doc.DatasetID, doc.Title, doc.URL, doc.Body, vec).Scan(&insertedID)
 	if err != nil {
 		return fmt.Errorf("failed to insert document: %w", err)
 	}

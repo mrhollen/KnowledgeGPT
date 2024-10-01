@@ -19,7 +19,6 @@ CREATE TABLE datasets (
 CREATE TABLE documents (
 	id serial4 NOT NULL,
 	dataset_id int4 NOT NULL,
-	user_id int4 NOT NULL,
 	title text NOT NULL,
 	url text NULL,
 	body text NOT NULL,

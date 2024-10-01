@@ -5,7 +5,6 @@ import "time"
 type Document struct {
 	ID        int64     `json:"id"`
 	DatasetID int64     `json:"dataset_id"`
-	UserID    int64     `json:"user_id"`
 	Title     string    `json:"title"`
 	URL       string    `json:"url,omitempty"`
 	Body      string    `json:"body"`

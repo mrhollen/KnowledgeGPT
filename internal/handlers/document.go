@@ -43,7 +43,6 @@ func (h *DocumentHandler) AddDocument(userId int64, w http.ResponseWriter, r *ht
 	}
 
 	doc := models.Document{
-		UserID:    userId,
 		Title:     req.Title,
 		URL:       req.URL,
 		Body:      req.Body,
