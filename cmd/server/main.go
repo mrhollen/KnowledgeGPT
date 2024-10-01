@@ -36,11 +36,6 @@ func main() {
 		llmDefaultModel = "text-davinci-003"
 	}
 
-	dbPath := os.Getenv("DB_PATH")
-	if dbPath == "" {
-		dbPath = "knowledgegpt.db" // Default value
-	}
-
 	dbConnectionString := os.Getenv("DB_CONNECTION_STRING")
 
 	// Initialize Database
