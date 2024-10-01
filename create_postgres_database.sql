@@ -2,6 +2,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 CREATE TABLE sessions (
 	id text NOT NULL,
+	user_id int4 NOT NULL,
 	messages _text NOT NULL,
 	model text NOT NULL,
 	CONSTRAINT sessions_pkey PRIMARY KEY (id)
@@ -9,14 +10,16 @@ CREATE TABLE sessions (
 
 CREATE TABLE datasets (
 	id serial4 NOT NULL,
+	user_id int4 NOT NULL,
 	"name" text NOT NULL,
 	CONSTRAINT datasets_pkey PRIMARY KEY (id),
-	CONSTRAINT datasets_unique UNIQUE (name)
+	CONSTRAINT datasets_unique UNIQUE (name, user_id)
 );
 
 CREATE TABLE documents (
 	id serial4 NOT NULL,
 	dataset_id int4 NOT NULL,
+	user_id int4 NOT NULL,
 	title text NOT NULL,
 	url text NULL,
 	body text NOT NULL,

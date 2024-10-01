@@ -69,13 +69,13 @@ func main() {
 	// Register Routes
 	http.HandleFunc("/documents", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
-			isAuthorized, err := checkAccessToken(r, accessTokenAuthorizer)
+			isAuthorized, userId, err := checkAccessToken(r, accessTokenAuthorizer)
 			if !isAuthorized || err != nil {
 				http.Error(w, "", http.StatusUnauthorized)
 				return
 			}
 
-			docHandler.AddDocument(w, r)
+			docHandler.AddDocument(userId, w, r)
 			return
 		}
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -83,7 +83,7 @@ func main() {
 
 	http.HandleFunc("/query", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
-			isAuthorized, err := checkAccessToken(r, accessTokenAuthorizer)
+			isAuthorized, userId, err := checkAccessToken(r, accessTokenAuthorizer)
 			if !isAuthorized || err != nil {
 				if err != nil {
 					fmt.Println(err)
@@ -93,7 +93,7 @@ func main() {
 				return
 			}
 
-			queryHandler.Query(w, r)
+			queryHandler.Query(userId, w, r)
 			return
 		}
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -108,15 +108,15 @@ func main() {
 	}
 }
 
-func checkAccessToken(r *http.Request, accessTokenAuthorizer *auth.AccessTokenAuthorizer) (bool, error) {
+func checkAccessToken(r *http.Request, accessTokenAuthorizer *auth.AccessTokenAuthorizer) (bool, int64, error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
-		return false, fmt.Errorf("authorization header is missing")
+		return false, 0, fmt.Errorf("authorization header is missing")
 	}
 
 	token := strings.TrimPrefix(authHeader, "Bearer ")
 	if token == authHeader {
-		return false, fmt.Errorf("invalid Authorization header format")
+		return false, 0, fmt.Errorf("invalid Authorization header format")
 	}
 
 	return accessTokenAuthorizer.CheckToken(token)

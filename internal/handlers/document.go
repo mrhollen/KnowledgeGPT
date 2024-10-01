@@ -16,7 +16,7 @@ type DocumentHandler struct {
 	DB     *db.PostgresDB
 }
 
-func (h *DocumentHandler) AddDocument(w http.ResponseWriter, r *http.Request) {
+func (h *DocumentHandler) AddDocument(userId int64, w http.ResponseWriter, r *http.Request) {
 	var req api.AddDocumentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
@@ -35,7 +35,7 @@ func (h *DocumentHandler) AddDocument(w http.ResponseWriter, r *http.Request) {
 		datasetName = "default"
 	}
 
-	datasetId, err := h.DB.GetOrCreateDataset(datasetName)
+	datasetId, err := h.DB.GetOrCreateDataset(datasetName, userId)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Error getting or creating dataset", http.StatusInternalServerError)
@@ -43,6 +43,7 @@ func (h *DocumentHandler) AddDocument(w http.ResponseWriter, r *http.Request) {
 	}
 
 	doc := models.Document{
+		UserID:    userId,
 		Title:     req.Title,
 		URL:       req.URL,
 		Body:      req.Body,

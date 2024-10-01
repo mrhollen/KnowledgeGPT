@@ -16,7 +16,7 @@ type QueryHandler struct {
 	Limit int
 }
 
-func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
+func (h *QueryHandler) Query(userId int64, w http.ResponseWriter, r *http.Request) {
 	var req api.QueryRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
@@ -42,7 +42,7 @@ func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
 		datasetName = "default"
 	}
 
-	docs, err := h.DB.SearchDocuments(queryVector, datasetName, limit)
+	docs, err := h.DB.SearchDocuments(queryVector, datasetName, userId, limit)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Failed to search documents", http.StatusInternalServerError)

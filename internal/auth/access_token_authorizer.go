@@ -19,13 +19,13 @@ func NewAccessTokenAuthorizer(db *db.PostgresDB) *AccessTokenAuthorizer {
 	}
 }
 
-func (a *AccessTokenAuthorizer) CheckToken(accessTokenValue string) (bool, error) {
+func (a *AccessTokenAuthorizer) CheckToken(accessTokenValue string) (bool, int64, error) {
 	if a.accessTokens == nil {
 		db := *a.DB
 
 		accessTokens, err := db.GetAccessTokens()
 		if err != nil {
-			return false, fmt.Errorf("could not fetch access tokens %w", err)
+			return false, 0, fmt.Errorf("could not fetch access tokens %w", err)
 		}
 
 		a.accessTokens = accessTokens
@@ -33,11 +33,11 @@ func (a *AccessTokenAuthorizer) CheckToken(accessTokenValue string) (bool, error
 
 	for _, token := range *a.accessTokens {
 		if token.Token == accessTokenValue {
-			return true, nil
+			return true, token.UserID, nil
 		}
 
 		fmt.Printf("%s and %s are not equal", token.Token, accessTokenValue)
 	}
 
-	return false, nil
+	return false, 0, nil
 }

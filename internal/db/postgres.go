@@ -49,13 +49,13 @@ func (pg *PostgresDB) AddDocument(doc models.Document) error {
 	vec := pgvector.NewVector(doc.Vec)
 
 	query := `
-		INSERT INTO documents (dataset_id, title, url, body, vector)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO documents (dataset_id, user_id, title, url, body, vector)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id
 	`
 
 	var insertedID int64
-	err := pg.db.QueryRowContext(ctx, query, doc.DatasetID, doc.Title, doc.URL, doc.Body, vec).Scan(&insertedID)
+	err := pg.db.QueryRowContext(ctx, query, doc.DatasetID, doc.UserID, doc.Title, doc.URL, doc.Body, vec).Scan(&insertedID)
 	if err != nil {
 		return fmt.Errorf("failed to insert document: %w", err)
 	}
@@ -63,7 +63,7 @@ func (pg *PostgresDB) AddDocument(doc models.Document) error {
 	return nil
 }
 
-func (pg *PostgresDB) SearchDocuments(queryVector []float32, datasetName string, limit int) ([]models.Document, error) {
+func (pg *PostgresDB) SearchDocuments(queryVector []float32, datasetName string, userId int64, limit int) ([]models.Document, error) {
 	if len(queryVector) == 0 {
 		return nil, errors.New("query vector cannot be empty")
 	}
@@ -80,12 +80,12 @@ func (pg *PostgresDB) SearchDocuments(queryVector []float32, datasetName string,
 		SELECT documents.id, documents.title, documents.url, documents.body, datasets.id
 		FROM documents
 		JOIN datasets ON datasets.id = documents.dataset_id
-		WHERE datasets.name = $1
-		ORDER BY documents.vector <-> $2
-		LIMIT $3
+		WHERE datasets.name = $1 AND datasets.user_id = $2
+		ORDER BY documents.vector <-> $3
+		LIMIT $4
 	`
 
-	rows, err := pg.db.QueryContext(ctx, query, datasetName, vec, limit)
+	rows, err := pg.db.QueryContext(ctx, query, datasetName, userId, vec, limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute search query: %w", err)
 	}
@@ -163,7 +163,7 @@ func (pg *PostgresDB) SaveSession(session models.ChatSession) error {
 	return nil
 }
 
-func (pg *PostgresDB) GetOrCreateDataset(datasetName string) (int64, error) {
+func (pg *PostgresDB) GetOrCreateDataset(datasetName string, userId int64) (int64, error) {
 	if datasetName == "" {
 		return 0, errors.New("dataset name cannot be empty")
 	}
@@ -173,19 +173,19 @@ func (pg *PostgresDB) GetOrCreateDataset(datasetName string) (int64, error) {
 
 	query := `
 		WITH data as (
-			INSERT INTO datasets (name)
-			VALUES ($1)
-			ON CONFLICT (name) DO NOTHING
+			INSERT INTO datasets (name, user_id)
+			VALUES ($1, $2)
+			ON CONFLICT (name, user_id) DO NOTHING
 			RETURNING id
 		)
 		SELECT id FROM data
 			UNION ALL
-		SELECT id FROM datasets WHERE name=$1
+		SELECT id FROM datasets WHERE name=$1 AND user_id = $2
 		LIMIT 1;
 	`
 
 	var id int64
-	err := pg.db.QueryRowContext(ctx, query, datasetName).Scan(&id)
+	err := pg.db.QueryRowContext(ctx, query, datasetName, userId).Scan(&id)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get dataset id: %w", err)
 	}
