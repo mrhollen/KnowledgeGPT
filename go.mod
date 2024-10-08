@@ -7,4 +7,4 @@ require (
 	github.com/pgvector/pgvector-go v0.2.2
 )
 
-require github.com/ledongthuc/pdf v0.0.0-20240201131950-da5b75280b06 // indirect
+require github.com/ledongthuc/pdf v0.0.0-20240201131950-da5b75280b06
