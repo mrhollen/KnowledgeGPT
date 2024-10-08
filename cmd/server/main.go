@@ -15,6 +15,27 @@ import (
 	"github.com/mrhollen/KnowledgeGPT/pkg/utils"
 )
 
+func handler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello, CORS is enabled for all!")
+}
+
+func enableCORS(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+		// Handle preflight requests
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
+}
+
 func main() {
 	// Load environment variables from .env file if it exists
 	envPath := ".env"
@@ -62,7 +83,7 @@ func main() {
 	}
 
 	// Register Routes
-	http.HandleFunc("/documents", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/documents", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			isAuthorized, userId, err := checkAccessToken(r, accessTokenAuthorizer)
 			if !isAuthorized || err != nil {
@@ -74,9 +95,9 @@ func main() {
 			return
 		}
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	})
+	}))
 
-	http.HandleFunc("/bulk/documents", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/bulk/documents", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			isAuthorized, userId, err := checkAccessToken(r, accessTokenAuthorizer)
 			if !isAuthorized || err != nil {
