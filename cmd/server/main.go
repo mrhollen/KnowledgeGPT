@@ -15,33 +15,43 @@ import (
 	"github.com/mrhollen/KnowledgeGPT/pkg/utils"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, CORS is enabled for all!")
-}
-
-func enableCORS(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Set CORS headers
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-
-		// Handle preflight requests
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	}
+// Server encapsulates the dependencies for the HTTP server
+type Server struct {
+	Database              *db.PostgresDB
+	LLMClient             *llm.OpenAIClient
+	AccessTokenAuthorizer *auth.AccessTokenAuthorizer
+	DocumentHandler       *handlers.DocumentHandler
+	QueryHandler          *handlers.QueryHandler
+	UploadHandler         *handlers.UploadHandler
 }
 
 func main() {
+	// Initialize the server with all dependencies
+	server, err := initializeServer()
+	if err != nil {
+		log.Fatalf("Failed to initialize server: %v", err)
+	}
+
+	// Register all HTTP routes
+	server.registerRoutes()
+
+	// Construct the server address from environment variables
+	addressAndPort := fmt.Sprintf("%s:%s", os.Getenv("IP_ADDRESS"), os.Getenv("PORT"))
+
+	// Start the HTTP server
+	log.Printf("KnowledgeGPT server is running on %s\n", addressAndPort)
+	if err := http.ListenAndServe(addressAndPort, nil); err != nil {
+		log.Fatalf("Server failed: %v", err)
+	}
+}
+
+// initializeServer sets up the server with all necessary dependencies
+func initializeServer() (*Server, error) {
 	// Load environment variables from .env file if it exists
 	envPath := ".env"
 	if _, err := os.Stat(envPath); err == nil {
 		if err := utils.LoadDotenv(envPath); err != nil {
-			log.Fatalf("Error loading .env file: %v", err)
+			return nil, fmt.Errorf("error loading .env file: %w", err)
 		}
 		log.Println(".env file loaded successfully")
 	} else {
@@ -62,7 +72,7 @@ func main() {
 	// Initialize Database
 	database, err := db.NewPostgresDB(dbConnectionString)
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		return nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
 
 	// Initialize LLM Client
@@ -83,98 +93,128 @@ func main() {
 	}
 	uploadHandler := &handlers.UploadHandler{}
 
-	// Register Routes
-	http.HandleFunc("/documents", enableCORS(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			isAuthorized, userId, err := checkAccessToken(r, accessTokenAuthorizer)
-			if !isAuthorized || err != nil {
-				http.Error(w, "", http.StatusUnauthorized)
-				return
-			}
+	// Create and return the Server instance
+	return &Server{
+		Database:              database,
+		LLMClient:             llmClient,
+		AccessTokenAuthorizer: accessTokenAuthorizer,
+		DocumentHandler:       docHandler,
+		QueryHandler:          queryHandler,
+		UploadHandler:         uploadHandler,
+	}, nil
+}
 
-			docHandler.AddDocument(userId, w, r)
+// registerRoutes sets up all the HTTP routes with their respective handlers
+func (s *Server) registerRoutes() {
+	http.HandleFunc("/documents", s.enableCORS(s.handleDocuments))
+	http.HandleFunc("/bulk/documents", s.enableCORS(s.handleBulkDocuments))
+	http.HandleFunc("/query", s.enableCORS(s.handleQuery))
+	http.HandleFunc("/upload", s.enableCORS(s.handleUpload))
+}
+
+// enableCORS is a middleware that adds CORS headers to the response
+func (s *Server) enableCORS(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+		// Handle preflight requests
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
 			return
 		}
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}))
 
-	http.HandleFunc("/bulk/documents", enableCORS(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			isAuthorized, userId, err := checkAccessToken(r, accessTokenAuthorizer)
-			if !isAuthorized || err != nil {
-				if err != nil {
-					fmt.Println(err)
-				}
-
-				http.Error(w, "", http.StatusUnauthorized)
-				return
-			}
-
-			docHandler.AddDocuments(userId, w, r)
-			return
-		}
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}))
-
-	http.HandleFunc("/query", enableCORS(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			isAuthorized, userId, err := checkAccessToken(r, accessTokenAuthorizer)
-			if !isAuthorized || err != nil {
-				if err != nil {
-					fmt.Println(err)
-				}
-
-				http.Error(w, "", http.StatusUnauthorized)
-				return
-			}
-
-			queryHandler.SimpleQuery(userId, w, r)
-			return
-		} else if r.Method == http.MethodPost {
-			isAuthorized, userId, err := checkAccessToken(r, accessTokenAuthorizer)
-			if !isAuthorized || err != nil {
-				if err != nil {
-					fmt.Println(err)
-				}
-
-				http.Error(w, "", http.StatusUnauthorized)
-				return
-			}
-
-			queryHandler.QueryWithLLM(userId, w, r)
-			return
-		}
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}))
-
-	http.HandleFunc("/upload", enableCORS(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			isAuthorized, userId, err := checkAccessToken(r, accessTokenAuthorizer)
-			if !isAuthorized || err != nil {
-				if err != nil {
-					fmt.Println(err)
-				}
-
-				http.Error(w, "", http.StatusUnauthorized)
-				return
-			}
-
-			uploadHandler.UploadFile(userId, w, r)
-			return
-		}
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}))
-
-	addressAndPort := fmt.Sprintf("%s:%s", os.Getenv("IP_ADDRESS"), os.Getenv("PORT"))
-
-	// Start Server
-	log.Printf("KnowledgeGPT server is running on %s\n", addressAndPort)
-	if err := http.ListenAndServe(addressAndPort, nil); err != nil {
-		log.Fatalf("Server failed: %v", err)
+		// Proceed to the next handler
+		next.ServeHTTP(w, r)
 	}
 }
 
-func checkAccessToken(r *http.Request, accessTokenAuthorizer *auth.AccessTokenAuthorizer) (bool, int64, error) {
+// handleDocuments handles requests to the /documents endpoint
+func (s *Server) handleDocuments(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		isAuthorized, userId, err := s.checkAccessToken(r)
+		if !isAuthorized || err != nil {
+			if err != nil {
+				log.Println(err)
+			}
+			http.Error(w, "", http.StatusUnauthorized)
+			return
+		}
+
+		s.DocumentHandler.AddDocument(userId, w, r)
+		return
+	}
+	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+}
+
+// handleBulkDocuments handles requests to the /bulk/documents endpoint
+func (s *Server) handleBulkDocuments(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		isAuthorized, userId, err := s.checkAccessToken(r)
+		if !isAuthorized || err != nil {
+			if err != nil {
+				log.Println(err)
+			}
+			http.Error(w, "", http.StatusUnauthorized)
+			return
+		}
+
+		s.DocumentHandler.AddDocuments(userId, w, r)
+		return
+	}
+	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+}
+
+// handleQuery handles requests to the /query endpoint
+func (s *Server) handleQuery(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		isAuthorized, userId, err := s.checkAccessToken(r)
+		if !isAuthorized || err != nil {
+			if err != nil {
+				log.Println(err)
+			}
+			http.Error(w, "", http.StatusUnauthorized)
+			return
+		}
+		s.QueryHandler.SimpleQuery(userId, w, r)
+	case http.MethodPost:
+		isAuthorized, userId, err := s.checkAccessToken(r)
+		if !isAuthorized || err != nil {
+			if err != nil {
+				log.Println(err)
+			}
+			http.Error(w, "", http.StatusUnauthorized)
+			return
+		}
+		s.QueryHandler.QueryWithLLM(userId, w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// handleUpload handles requests to the /upload endpoint
+func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		isAuthorized, userId, err := s.checkAccessToken(r)
+		if !isAuthorized || err != nil {
+			if err != nil {
+				log.Println(err)
+			}
+			http.Error(w, "", http.StatusUnauthorized)
+			return
+		}
+
+		s.UploadHandler.UploadFile(userId, w, r)
+		return
+	}
+	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+}
+
+// checkAccessToken verifies the Authorization header and validates the token
+func (s *Server) checkAccessToken(r *http.Request) (bool, int64, error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		return false, 0, fmt.Errorf("authorization header is missing")
@@ -185,5 +225,5 @@ func checkAccessToken(r *http.Request, accessTokenAuthorizer *auth.AccessTokenAu
 		return false, 0, fmt.Errorf("invalid Authorization header format")
 	}
 
-	return accessTokenAuthorizer.CheckToken(token)
+	return s.AccessTokenAuthorizer.CheckToken(token)
 }
