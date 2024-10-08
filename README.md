@@ -245,10 +245,10 @@ KnowledgeGPT/
     |   |   +-- models.go
     |   +-- parsing/
     |       +-- pdf.go
-    |-- pkg/
-    |   +-- utils/
-    |       |-- dotenv.go
-    |       +-- utils.go
+    +-- pkg/
+        +-- utils/
+            |-- dotenv.go
+            +-- utils.go
 ```
 
 ## Contributing
