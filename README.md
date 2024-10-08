@@ -218,36 +218,37 @@ curl -X POST http://localhost:8080/query \
 
 ```
 KnowledgeGPT/
-├── cmd/
-│   └── server/
-│       └── main.go                        # Entry point of the application
-├── internal/
-│   ├── api/
-│   │   ├── documents/
-│   │   │   └── add_document_request.go    # Request object for adding documents
-│   │   └── query/
-│   │       ├── query_request.go           # Request object for querying documents
-│   │       └── query_response.go          # Response object for document queries
-│   ├── auth/
-│   │   └── access_token_authorizer.go     # Access Token authentication implementation
-│   ├── db/
-│   │   ├── db.go                          # Database interface
-│   │   └── postgres.go                    # Postgres implementation
-│   ├── handlers/
-│   │   ├── document.go                    # Handler for document endpoints
-│   │   ├── query.go                       # Handler for query endpoints
-│   ├── llm/
-│   │   ├── client.go                      # LLM client interface
-│   │   └── openai.go                      # OpenAI-compatible client implementation
-│   ├── models/
-│   │   └── models.go                      # Data models
-│   └── session/
-│       └── session.go                     # Session management
-├── pkg/
-│   └── utils/
-│       └── utils.go                       # Utility functions (e.g., UUID generation)
-├── go.mod                                 # Go module file
-└── go.sum                                 # Go dependencies checksum
+    |-- cmd/
+    |   +-- server/
+    |       +-- main.go
+    |-- internal/
+    |   |-- api/
+    |   |   |-- documents/
+    |   |   |   +-- add_document_request.go
+    |   |   +-- query/
+    |   |       |-- query_request.go
+    |   |       |-- query_response.go
+    |   |       |-- simple_query_request.go
+    |   |       +-- simple_query_response.go
+    |   |-- auth/
+    |   |   +-- access_token_authorizer.go
+    |   |-- db/
+    |   |   +-- postgres.go
+    |   |-- handlers/
+    |   |   |-- document.go
+    |   |   |-- query.go
+    |   |   +-- upload.go
+    |   |-- llm/
+    |   |   |-- client.go
+    |   |   +-- openai.go
+    |   |-- models/
+    |   |   +-- models.go
+    |   +-- parsing/
+    |       +-- pdf.go
+    |-- pkg/
+    |   +-- utils/
+    |       |-- dotenv.go
+    |       +-- utils.go
 ```
 
 ## Contributing
