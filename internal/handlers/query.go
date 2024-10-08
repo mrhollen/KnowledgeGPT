@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	api "github.com/mrhollen/KnowledgeGPT/internal/api/query"
@@ -18,7 +19,69 @@ type QueryHandler struct {
 	Limit int
 }
 
-func (h *QueryHandler) Query(userId int64, w http.ResponseWriter, r *http.Request) {
+func (h *QueryHandler) SimpleQuery(userId int64, w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+
+	queryString := query.Get("query")
+	limit := query.Get("limit")
+	dataset := query.Get("dataset")
+
+	limitNum := 5
+
+	if queryString == "" {
+		http.Error(w, "No query", http.StatusBadRequest)
+		return
+	}
+	if dataset == "" {
+		dataset = "default"
+	}
+	if limit != "" {
+		var err error
+		limitNum, err = strconv.Atoi(limit)
+		if err != nil {
+			limitNum = 5
+		}
+	}
+
+	request := api.SimpleQueryRequest{
+		Query:   queryString,
+		Limit:   limitNum,
+		Dataset: dataset,
+	}
+
+	queryVector, err := h.LLM.GetEmbedding(request.Query, "")
+	if err != nil {
+		http.Error(w, "Could not generate query embedding", http.StatusInternalServerError)
+		return
+	}
+
+	docs, err := h.DB.SimpleSearchDocuments(queryVector, request.Dataset, userId, request.Limit)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Failed to search documents", http.StatusInternalServerError)
+		return
+	}
+
+	response := api.SimpleQueryResponse{
+		Responses: []api.SimpleQueryResponseContent{},
+	}
+
+	for _, doc := range docs {
+		response.Responses = append(
+			response.Responses,
+			api.SimpleQueryResponseContent{
+				Title: doc.Title,
+				URL:   doc.URL,
+				Text:  doc.Body,
+			},
+		)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func (h *QueryHandler) QueryWithLLM(userId int64, w http.ResponseWriter, r *http.Request) {
 	var req api.QueryRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)

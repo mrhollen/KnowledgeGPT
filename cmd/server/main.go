@@ -81,6 +81,7 @@ func main() {
 		LLM:   llmClient,
 		Limit: 512,
 	}
+	uploadHandler := &handlers.UploadHandler{}
 
 	// Register Routes
 	http.HandleFunc("/documents", enableCORS(func(w http.ResponseWriter, r *http.Request) {
@@ -113,9 +114,40 @@ func main() {
 			return
 		}
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	})
+	}))
 
-	http.HandleFunc("/query", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/query", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			isAuthorized, userId, err := checkAccessToken(r, accessTokenAuthorizer)
+			if !isAuthorized || err != nil {
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				http.Error(w, "", http.StatusUnauthorized)
+				return
+			}
+
+			queryHandler.SimpleQuery(userId, w, r)
+			return
+		} else if r.Method == http.MethodPost {
+			isAuthorized, userId, err := checkAccessToken(r, accessTokenAuthorizer)
+			if !isAuthorized || err != nil {
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				http.Error(w, "", http.StatusUnauthorized)
+				return
+			}
+
+			queryHandler.QueryWithLLM(userId, w, r)
+			return
+		}
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}))
+
+	http.HandleFunc("/upload", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			isAuthorized, userId, err := checkAccessToken(r, accessTokenAuthorizer)
 			if !isAuthorized || err != nil {
@@ -127,11 +159,11 @@ func main() {
 				return
 			}
 
-			queryHandler.Query(userId, w, r)
+			uploadHandler.UploadFile(userId, w, r)
 			return
 		}
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	})
+	}))
 
 	addressAndPort := fmt.Sprintf("%s:%s", os.Getenv("IP_ADDRESS"), os.Getenv("PORT"))
 

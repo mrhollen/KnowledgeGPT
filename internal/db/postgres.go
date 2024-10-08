@@ -63,6 +63,56 @@ func (pg *PostgresDB) AddDocument(doc models.Document) error {
 	return nil
 }
 
+func (pg *PostgresDB) SimpleSearchDocuments(queryVector []float32, datasetName string, userId int64, maxResults int) ([]models.Document, error) {
+	if len(queryVector) == 0 {
+		return nil, errors.New("query vector cannot be empty")
+	}
+	if maxResults <= 0 {
+		return nil, errors.New("maxResults must be greater than zero")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	vec := pgvector.NewVector(queryVector)
+
+	query := `
+		SELECT 
+			documents.id, 
+			documents.title, 
+			documents.url, 
+			documents.body, 
+			datasets.id AS dataset_id
+		FROM documents
+		JOIN datasets ON datasets.id = documents.dataset_id
+		WHERE datasets.name = $1 AND datasets.user_id = $2
+		ORDER BY documents.vector <-> $3
+		LIMIT $4
+    `
+
+	rows, err := pg.db.QueryContext(ctx, query, datasetName, userId, vec, maxResults)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute search query: %w", err)
+	}
+	defer rows.Close()
+
+	var documents []models.Document
+	for rows.Next() {
+		var doc models.Document
+		err := rows.Scan(&doc.ID, &doc.Title, &doc.URL, &doc.Body, &doc.DatasetID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan document: %w", err)
+		}
+		documents = append(documents, doc)
+	}
+
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("error iterating through documents: %w", rows.Err())
+	}
+
+	return documents, nil
+}
+
 func (pg *PostgresDB) SearchDocuments(queryVector []float32, datasetName string, userId int64, maxTotalWordCount int) ([]models.Document, error) {
 	if len(queryVector) == 0 {
 		return nil, errors.New("query vector cannot be empty")
