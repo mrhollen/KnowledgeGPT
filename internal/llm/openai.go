@@ -28,6 +28,7 @@ type OpenAIRequest struct {
 	Messages    []OpenAIMessage `json:"messages"`
 	MaxTokens   int             `json:"max_tokens,omitempty"`
 	Temperature int             `json:"tempurature"`
+	Seed        *int            `json:"seed,omitempty"`
 }
 
 type OpenAIMessage struct {
@@ -121,11 +122,15 @@ func (c *OpenAIClient) GetSearchWords(queryString string, modelName string) (str
 		modelName = c.defaultModelName
 	}
 
+	seedPtr := new(int)
+	*seedPtr = 1234
+
 	reqBody := OpenAIRequest{
 		Model:       modelName,
 		Messages:    []OpenAIMessage{message},
 		MaxTokens:   -1,
 		Temperature: 0,
+		Seed:        seedPtr,
 	}
 
 	return c.getResponse(&reqBody)
