@@ -2,13 +2,34 @@ package models
 
 import "time"
 
+// Document represents the metadata for a document stored in the database.
+// The actual content is stored in associated DocumentChunk records.
 type Document struct {
-	ID        int64     `json:"id"`
-	DatasetID int64     `json:"dataset_id"`
-	Title     string    `json:"title"`
-	URL       string    `json:"url,omitempty"`
-	Body      string    `json:"body"`
-	Vec       []float32 `json:"vector"`
+	ID        int64           `json:"id" db:"id"`
+	DatasetID int64           `json:"dataset_id" db:"dataset_id"`
+	Title     string          `json:"title" db:"title"`
+	URL       *string         `json:"url,omitempty" db:"url"` // Use pointer for NULLable fields
+	CreatedAt time.Time       `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time       `json:"updated_at" db:"updated_at"`
+	Chunks    []DocumentChunk `json:"chunks,omitempty"`
+}
+
+// DocumentChunk represents a sequential chunk of text from a parent Document.
+type DocumentChunk struct {
+	ID             int64             `json:"id" db:"id"`
+	DocumentID     int64             `json:"document_id" db:"document_id"`
+	SequenceNumber int               `json:"sequence_number" db:"sequence_number"` // Order of the chunk
+	ChunkText      string            `json:"chunk_text" db:"chunk_text"`           // Text content of the chunk
+	Concepts       []DocumentConcept `json:"concepts,omitempty"`
+}
+
+// DocumentConcept represents a core concept extracted from a DocumentChunk,
+// along with its specific embedding vector.
+type DocumentConcept struct {
+	ID              int64     `json:"id" db:"id"`
+	DocumentChunkID int64     `json:"document_chunk_id" db:"document_chunk_id"` // Link to the source chunk
+	ConceptText     string    `json:"concept_text" db:"concept_text"`           // The extracted concept
+	Vector          []float32 `json:"vector" db:"vector"`                       // Embedding vector for this concept
 }
 
 type ChatSession struct {

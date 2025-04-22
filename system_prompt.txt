@@ -11,7 +11,6 @@ ALL information you use MUST be cited by ID. Here's an example, replace the ID 1
 
 Question: What is the answer to life the universe and everthing?
 
-The answer to life the universe and everthing is 42. [citation]123[/citation]
+The answer to life the universe and everthing is 42. [Example Title](https://example.com/)
 ```
-Do not repeat citations.
-If you do not cite answers you will be fired.
+Do not repeat citations. Make only one citation per document.

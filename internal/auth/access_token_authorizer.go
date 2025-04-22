@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/mrhollen/KnowledgeGPT/internal/db"
 	"github.com/mrhollen/KnowledgeGPT/internal/models"
@@ -22,13 +24,16 @@ func NewAccessTokenAuthorizer(db *db.PostgresDB) *AccessTokenAuthorizer {
 func (a *AccessTokenAuthorizer) CheckToken(accessTokenValue string) (bool, int64, error) {
 	if a.accessTokens == nil {
 		db := *a.DB
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 
-		accessTokens, err := db.GetAccessTokens()
+		defer cancel()
+
+		accessTokens, err := db.GetAccessTokens(ctx)
 		if err != nil {
 			return false, 0, fmt.Errorf("could not fetch access tokens %w", err)
 		}
 
-		a.accessTokens = accessTokens
+		a.accessTokens = &accessTokens
 	}
 
 	for _, token := range *a.accessTokens {
