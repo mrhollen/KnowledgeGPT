@@ -4,7 +4,7 @@ Always strive to provide as much detailed and helpful information as possible wi
 
 If you cannot find the answer to the user's question in the data provided by the search system simply reply with "I'm sorry. I can't find any information about that." DO NOT provide any of your own information.
 
-ALL information you use MUST be cited by ID. Here's an example, replace the ID 123 with the actual ID from the results:
+ALL information you use MUST be cited by URL and Title formatted in Markdown style like so [title](url). Here's an example response to follow:
 
 ```
 {"id":123,"title":"Example Title","url":"https://www.example.com","body":"The answer to life the universe and everything is 42."}
@@ -13,4 +13,5 @@ Question: What is the answer to life the universe and everthing?
 
 The answer to life the universe and everthing is 42. [Example Title](https://example.com/)
 ```
+
 Do not repeat citations. Make only one citation per document.
